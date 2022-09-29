@@ -10,6 +10,11 @@ from detectron2.structures import BoxMode
 from xml.dom import minidom
 
 
+PANEL_ID = 1
+BUBBLE_ID = 2
+CHARACTER_ID = 3
+
+
 def _parse_args() -> argparse.Namespace:
     usage_message = """
                     Script for creating COCO annotations for eBDtheque.
@@ -40,10 +45,20 @@ def main(args: argparse.Namespace):
 
     categories = [
         {
-            "supercategory": "comic",
-            "id": 1,
+            "supercategory": None,
+            "id": PANEL_ID,
             "name": "panel",
         },
+        {
+            "supercategory": None,
+            "id": BUBBLE_ID,
+            "name": "speech_bubble",
+        },
+        {
+            "supercategory": None,
+            "id": CHARACTER_ID,
+            "name": "character",
+        }
     ]
 
     images_paths = sorted(glob.glob(os.path.join(args.ds_dir, "data/*.jpg")))
@@ -77,33 +92,54 @@ def main(args: argparse.Namespace):
                 lambda x: x.getAttribute('class') == "Panel",
                 svg
             ))
+            characters = next(filter(
+                lambda x: x.getAttribute('class') == "Character",
+                svg
+            ))
+            balloons = next(filter(
+                lambda x: x.getAttribute('class') == "Balloon",
+                svg
+            ))
 
-            for ann in panels.getElementsByTagName("polygon"):
-                ann = ann.getAttribute("points")
-                coords = [coord.split(',') for coord in ann.split()[:-1]]
-                coords = [
-                    float(coords[0][0]), float(coords[0][1]),
-                    float(coords[2][0]), float(coords[2][1])
-                ]
-                coords[2] -= coords[0]
-                coords[3] -= coords[1]
-                segm = [
-                    coords[0], coords[1],
-                    coords[0] + coords[2], coords[1],
-                    coords[0] + coords[2], coords[1] + coords[3],
-                    coords[0], coords[1] + coords[3],
-                ]
-                annotations.append({
-                    "id": next_ann_id,
-                    "image_id": i+1,
-                    "category_id": 1,
-                    "bbox": coords,
-                    "bbox_mode": BoxMode.XYWH_ABS,
-                    "segmentation": [segm],
-                    "area": coords[2] * coords[3],
-                    "iscrowd": 0,
-                })
-                next_ann_id += 1
+            for object_id, object_list in [
+                (PANEL_ID, panels),
+                (CHARACTER_ID, characters),
+                (BUBBLE_ID, balloons)]:
+                for ann in object_list.getElementsByTagName("polygon"):
+                    ann = ann.getAttribute("points").split()
+
+                    if ann[0] == ann[-1]:
+                        ann = ann[:-1]
+
+                    coords = [coord.split(',') for coord in ann]
+                    x, y = zip(*coords)
+                    x = [int(e) for e in x]
+                    y = [int(e) for e in y]
+                    max_x = max(x); min_x = min(x)
+                    max_y = max(y); min_y = min(y)
+                    coords = [
+                        min_x, min_y,
+                        max_x, max_y
+                    ]
+                    coords[2] -= coords[0]
+                    coords[3] -= coords[1]
+                    segm = [
+                        coords[0], coords[1],
+                        coords[0] + coords[2], coords[1],
+                        coords[0] + coords[2], coords[1] + coords[3],
+                        coords[0], coords[1] + coords[3],
+                    ]
+                    annotations.append({
+                        "id": next_ann_id,
+                        "image_id": i+1,
+                        "category_id": object_id,
+                        "bbox": coords,
+                        "bbox_mode": BoxMode.XYWH_ABS,
+                        "segmentation": [segm],
+                        "area": coords[2] * coords[3],
+                        "iscrowd": 0,
+                    })
+                    next_ann_id += 1
 
     coco_dict = {
         "info": info,

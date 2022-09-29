@@ -29,9 +29,14 @@ class MyTrainer(DefaultTrainer):
     @classmethod
     def build_train_loader(cls, cfg):
         mapper = DatasetMapper(cfg, is_train=True, augmentations=[ 
+            T.ResizeShortestEdge((400, 600, 1200, ), max_size=1200, sample_style="choice"),
             MyColorAugmentation(),
             T.RandomBrightness(0.125, 8),
             T.RandomContrast(0.125, 8),
             T.RandomSaturation(0.125, 8),
+            # Finetuning
+            # T.RandomBrightness(0.75, 1.25),
+            # T.RandomContrast(0.75, 1.25),
+            # T.RandomSaturation(0.75, 1.25),
         ])
         return build_detection_train_loader(cfg, mapper=mapper)

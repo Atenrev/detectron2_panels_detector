@@ -1,10 +1,11 @@
-import json
 import fiftyone as fo
 import fiftyone.utils.coco as fouc
 
 
+seed = 42
+
 # The directory containing the dataset to import
-dataset_dir = "./datasets/comics_panels_annotations"
+dataset_dir = "./datasets/eBDtheque_database_v3"
 
 # The type of the dataset being imported
 dataset_type = fo.types.COCODetectionDataset

@@ -9,6 +9,11 @@ from datetime import datetime
 from detectron2.structures import BoxMode
 
 
+PANEL_ID = 1
+BUBBLE_ID = 2
+CHARACTER_ID = 3
+
+
 def _parse_args() -> argparse.Namespace:
     usage_message = """
                     Script for creating COCO annotations for COMICS.
@@ -39,10 +44,20 @@ def main(args: argparse.Namespace):
 
     categories = [
         {
-            "supercategory": "comic",
-            "id": 1,
+            "supercategory": None,
+            "id": PANEL_ID,
             "name": "panel",
         },
+        {
+            "supercategory": None,
+            "id": BUBBLE_ID,
+            "name": "speech_bubble",
+        },
+        {
+            "supercategory": None,
+            "id": CHARACTER_ID,
+            "name": "character",
+        }
     ]
 
     images_paths = sorted(glob.glob(os.path.join(args.ds_dir, "data/*.jpg")))
