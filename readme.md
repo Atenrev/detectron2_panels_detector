@@ -1,6 +1,6 @@
 # Panels detector
 ## Description
-This repository contains the associated files to train a comic panels segmenter.
+This repository contains the associated files to train a comic panels segmenter using the Detectron2 library.
 
 ## Set up
 - Create a conda environment with Python 3.9
